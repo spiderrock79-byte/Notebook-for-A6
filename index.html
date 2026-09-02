@@ -3,166 +3,562 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Class Notes Hub</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header>
-  <div class="header-inner">
-    <h1>📚 Class Notes Hub</h1>
-    <div id="userArea"></div>
-  </div>
-</header>
+  <!-- ============================= -->
+  <!-- HEADER -->
+  <!-- ============================= -->
 
-<main>
+  <header>
+    <div class="header-inner">
 
-  <!-- AUTH -->
-  <section id="authSection" class="card">
-    <h2>Welcome 👋</h2>
+      <h1>📚 Class Notes Hub</h1>
 
-    <div class="tabs">
-      <button onclick="showLogin()">Login</button>
-      <button onclick="showSignup()">Create Account</button>
+      <div id="userArea"></div>
+
     </div>
-
-    <div id="loginBox">
-      <input id="loginEmail" type="email" placeholder="Email">
-      <input id="loginPassword" type="password" placeholder="Password">
-      <button class="primary" onclick="login()">Login</button>
-    </div>
-
-    <div id="signupBox" class="hidden">
-      <input id="signupName" type="text" placeholder="Full Name">
-      <input id="signupEmail" type="email" placeholder="Email">
-      <input id="signupPassword" type="password" placeholder="Password">
-      <button class="primary" onclick="signup()">Create Account</button>
-    </div>
-
-    <p id="authMessage"></p>
-  </section>
+  </header>
 
 
-  <!-- MAIN APP -->
-  <section id="appSection" class="hidden">
+  <main>
 
-    <div class="welcome">
-      <h2 id="welcomeText"></h2>
-      <button class="logout" onclick="logout()">Logout</button>
-    </div>
+    <!-- ============================= -->
+    <!-- LOGIN / SIGNUP -->
+    <!-- ============================= -->
 
-    <!-- SUBJECTS -->
-    <section>
-      <h2>📚 Subjects</h2>
-      <div id="subjectsGrid" class="grid"></div>
-    </section>
+    <section id="authSection" class="card">
 
+      <h2>Welcome 👋</h2>
 
-    <!-- SUBJECT DETAILS -->
-    <section id="subjectView" class="card hidden">
-      <button onclick="closeSubject()">← Back</button>
+      <div class="tabs">
 
-      <h2 id="subjectTitle"></h2>
+        <button onclick="showLogin()">
+          Login
+        </button>
 
-      <div id="subjectOptions" class="grid"></div>
+        <button onclick="showSignup()">
+          Create Account
+        </button>
 
-      <div id="unitsArea" class="hidden">
-        <h3>📖 Units</h3>
-        <div id="unitsGrid" class="grid"></div>
       </div>
 
-      <div id="syllabusArea" class="hidden">
-        <h3>📄 Syllabus / PDFs</h3>
-        <div id="syllabusList"></div>
+
+      <!-- LOGIN -->
+
+      <div id="loginBox">
+
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="Email"
+        >
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Password"
+        >
+
+        <button
+          class="primary"
+          onclick="login()"
+        >
+          Login
+        </button>
+
       </div>
-    </section>
 
 
-    <!-- UNIT VIEW -->
-    <section id="unitView" class="card hidden">
-      <button onclick="backToSubject()">← Back</button>
+      <!-- SIGNUP -->
 
-      <h2 id="unitTitle"></h2>
+      <div id="signupBox" class="hidden">
 
-      <div id="unitNotesList"></div>
-    </section>
+        <input
+          id="signupName"
+          type="text"
+          placeholder="Full Name"
+        >
+
+        <input
+          id="signupEmail"
+          type="email"
+          placeholder="Email"
+        >
+
+        <input
+          id="signupPassword"
+          type="password"
+          placeholder="Password"
+        >
+
+        <button
+          class="primary"
+          onclick="signup()"
+        >
+          Create Account
+        </button>
+
+      </div>
 
 
-    <!-- ANNOUNCEMENTS -->
-    <section id="announcementView" class="card hidden">
-      <button onclick="closeAnnouncements()">← Back</button>
-
-      <h2>📢 Class Announcements</h2>
-
-      <div id="announcementList"></div>
-    </section>
-
-
-    <!-- ADMIN -->
-    <section id="adminSection" class="card hidden">
-
-      <h2>🛠️ Admin Dashboard</h2>
-
-      <h3>Pending Unit Notes</h3>
-      <div id="pendingUnits"></div>
-
-      <h3>Pending Syllabus</h3>
-      <div id="pendingSyllabus"></div>
-
-      <hr>
-
-      <h3>➕ Add Unit</h3>
-
-      <select id="adminSubject"></select>
-      <input id="newUnitNumber" type="number" placeholder="Unit Number">
-      <input id="newUnitTitle" type="text" placeholder="Unit Title">
-
-      <button class="primary" onclick="createUnit()">Add Unit</button>
-
-      <p id="adminMessage"></p>
+      <p id="authMessage"></p>
 
     </section>
 
 
-    <!-- UPLOAD -->
-    <section id="uploadSection" class="card">
 
-      <h2>⬆️ Upload Notes</h2>
+    <!-- ============================= -->
+    <!-- MAIN APP -->
+    <!-- ============================= -->
 
-      <select id="uploadSubject" onchange="loadUploadUnits()">
-        <option value="">Select Subject</option>
-      </select>
+    <section id="appSection" class="hidden">
 
-      <select id="uploadUnit">
-        <option value="">Select Unit</option>
-      </select>
 
-      <input id="uploadTitle" type="text"
-             placeholder="Upload Title e.g. 02 Sep - Class Notes">
+      <!-- WELCOME -->
 
-      <textarea id="uploadDescription"
-                placeholder="Description (optional)"></textarea>
+      <div class="welcome">
 
-      <input id="noteFiles"
-             type="file"
-             multiple
-             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        <h2 id="welcomeText"></h2>
 
-      <button class="primary" onclick="uploadUnitNotes()">
-        Upload Notes
-      </button>
+        <button
+          class="logout"
+          onclick="logout()"
+        >
+          Logout
+        </button>
 
-      <p id="uploadMessage"></p>
+      </div>
+
+
+
+      <!-- ============================= -->
+      <!-- SUBJECTS -->
+      <!-- ============================= -->
+
+      <section>
+
+        <h2>📚 Subjects</h2>
+
+        <div
+          id="subjectsGrid"
+          class="grid"
+        ></div>
+
+      </section>
+
+
+
+      <!-- ============================= -->
+      <!-- SUBJECT VIEW -->
+      <!-- ============================= -->
+
+      <section
+        id="subjectView"
+        class="card hidden"
+      >
+
+        <button onclick="closeSubject()">
+          ← Back
+        </button>
+
+        <h2 id="subjectTitle"></h2>
+
+
+        <!-- SUBJECT OPTIONS -->
+
+        <div
+          id="subjectOptions"
+          class="grid"
+        ></div>
+
+
+
+        <!-- UNITS -->
+
+        <div
+          id="unitsArea"
+          class="hidden"
+        >
+
+          <h3>📖 Units</h3>
+
+          <div
+            id="unitsGrid"
+            class="grid"
+          ></div>
+
+        </div>
+
+
+
+        <!-- SYLLABUS -->
+
+        <div
+          id="syllabusArea"
+          class="hidden"
+        >
+
+          <h3>📄 Syllabus / PDFs</h3>
+
+          <div
+            id="syllabusList"
+          ></div>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ============================= -->
+      <!-- UNIT VIEW -->
+      <!-- ============================= -->
+
+      <section
+        id="unitView"
+        class="card hidden"
+      >
+
+        <button onclick="backToSubject()">
+          ← Back
+        </button>
+
+        <h2 id="unitTitle"></h2>
+
+        <div
+          id="unitNotesList"
+        ></div>
+
+      </section>
+
+
+
+      <!-- ============================= -->
+      <!-- CLASS ANNOUNCEMENTS -->
+      <!-- ============================= -->
+
+      <section
+        id="announcementView"
+        class="card hidden"
+      >
+
+        <button onclick="closeAnnouncements()">
+          ← Back
+        </button>
+
+        <h2>📢 Class Announcements</h2>
+
+        <div
+          id="announcementList"
+        ></div>
+
+      </section>
+
+
+
+      <!-- ============================= -->
+      <!-- ADMIN DASHBOARD -->
+      <!-- ============================= -->
+
+      <section
+        id="adminSection"
+        class="card hidden"
+      >
+
+        <h2>🛠️ Admin Dashboard</h2>
+
+
+
+        <!-- ============================= -->
+        <!-- PENDING UNIT NOTES -->
+        <!-- ============================= -->
+
+        <h3>⏳ Pending Unit Notes</h3>
+
+        <div
+          id="pendingUnits"
+        ></div>
+
+
+
+        <!-- ============================= -->
+        <!-- PENDING SYLLABUS -->
+        <!-- ============================= -->
+
+        <h3>⏳ Pending Syllabus</h3>
+
+        <div
+          id="pendingSyllabus"
+        ></div>
+
+
+
+        <hr>
+
+
+
+        <!-- ============================= -->
+        <!-- ADD UNIT -->
+        <!-- ============================= -->
+
+        <h3>➕ Add Unit</h3>
+
+        <select
+          id="adminSubject"
+        >
+
+          <option value="">
+            Select Subject
+          </option>
+
+        </select>
+
+
+        <input
+          id="newUnitNumber"
+          type="number"
+          placeholder="Unit Number"
+        >
+
+
+        <input
+          id="newUnitTitle"
+          type="text"
+          placeholder="Unit Title"
+        >
+
+
+        <button
+          class="primary"
+          onclick="createUnit()"
+        >
+          Add Unit
+        </button>
+
+
+        <p id="adminMessage"></p>
+
+
+
+        <hr>
+
+
+
+        <!-- ============================= -->
+        <!-- ADD SYLLABUS -->
+        <!-- ============================= -->
+
+        <h3>📄 Add Syllabus / PDF</h3>
+
+
+        <select
+          id="syllabusSubject"
+        >
+
+          <option value="">
+            Select Subject
+          </option>
+
+        </select>
+
+
+        <input
+          id="syllabusTitle"
+          type="text"
+          placeholder="Syllabus Title"
+        >
+
+
+        <textarea
+          id="syllabusDescription"
+          placeholder="Description (optional)"
+        ></textarea>
+
+
+        <input
+          id="syllabusFile"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        >
+
+
+        <button
+          class="primary"
+          onclick="uploadSyllabus()"
+        >
+          Upload Syllabus
+        </button>
+
+
+        <p id="syllabusMessage"></p>
+
+
+
+        <hr>
+
+
+
+        <!-- ============================= -->
+        <!-- CREATE ANNOUNCEMENT -->
+        <!-- ============================= -->
+
+        <h3>📢 Create Class Announcement</h3>
+
+
+        <input
+          id="announcementTitle"
+          type="text"
+          placeholder="Announcement Title"
+        >
+
+
+        <textarea
+          id="announcementContent"
+          placeholder="Write announcement..."
+        ></textarea>
+
+
+        <input
+          id="announcementFile"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        >
+
+
+        <button
+          class="primary"
+          onclick="createAnnouncement()"
+        >
+          Publish Announcement
+        </button>
+
+
+        <p id="announcementMessage"></p>
+
+
+
+        <hr>
+
+
+
+        <!-- ============================= -->
+        <!-- APPROVED NOTES MANAGEMENT -->
+        <!-- ============================= -->
+
+        <h3>🗑️ Manage Approved Unit Notes</h3>
+
+        <div
+          id="approvedAdminNotes"
+        ></div>
+
+      </section>
+
+
+
+      <!-- ============================= -->
+      <!-- STUDENT UPLOAD -->
+      <!-- ============================= -->
+
+      <section
+        id="uploadSection"
+        class="card"
+      >
+
+        <h2>⬆️ Upload Class Notes</h2>
+
+
+        <p>
+          Upload your class notes here.
+          They will remain pending until an admin approves them.
+        </p>
+
+
+        <!-- SUBJECT -->
+
+        <select
+          id="uploadSubject"
+          onchange="loadUploadUnits()"
+        >
+
+          <option value="">
+            Select Subject
+          </option>
+
+        </select>
+
+
+        <!-- UNIT -->
+
+        <select
+          id="uploadUnit"
+        >
+
+          <option value="">
+            Select Unit
+          </option>
+
+        </select>
+
+
+        <!-- TITLE -->
+
+        <input
+          id="uploadTitle"
+          type="text"
+          placeholder="Upload Title e.g. 02 Sep - Class Notes"
+        >
+
+
+        <!-- DESCRIPTION -->
+
+        <textarea
+          id="uploadDescription"
+          placeholder="Description (optional)"
+        ></textarea>
+
+
+        <!-- FILES -->
+
+        <input
+          id="noteFiles"
+          type="file"
+          multiple
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        >
+
+
+        <button
+          class="primary"
+          onclick="uploadUnitNotes()"
+        >
+          Upload Notes
+        </button>
+
+
+        <p id="uploadMessage"></p>
+
+      </section>
+
 
     </section>
 
-  </section>
+  </main>
 
-</main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+
+  <!-- ============================= -->
+  <!-- SUPABASE -->
+  <!-- ============================= -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="app.js"></script>
 
 </body>
-</html>
+          </html>
