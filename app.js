@@ -1,575 +1,369 @@
-const SUPABASE_URL =
-  "https://aycsojogegvfarkbmwqr.supabase.co";
+const SUPABASE_URL = "https://aycsojogegvfarkbmwqr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_4CTVyFAMpIbrA_AkMS6j7Q_zM4mWW8w";
 
-const SUPABASE_KEY =
-  "sb_publishable_4CTVyFAMpIbrA_AkMS6j7Q_zM4mWW8w";
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const db = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+let currentUser = null;
+let currentProfile = null;
+let currentSubject = null;
+let currentUnit = null;
 
 
-// ==========================
-// AUTH POPUP
-// ==========================
+// ========================================
+// START
+// ========================================
 
-function openLogin() {
-  document.getElementById("authModal").style.display = "flex";
+document.addEventListener("DOMContentLoaded", async () => {
   showLogin();
-}
 
-function openSignup() {
-  document.getElementById("authModal").style.display = "flex";
-  showSignup();
-}
+  const {
+    data: { session }
+  } = await db.auth.getSession();
 
-function closeAuth() {
-  document.getElementById("authModal").style.display = "none";
-  document.getElementById("authMessage").textContent = "";
-}
+  if (session) {
+    await startApp(session.user);
+  }
+
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (session) {
+      await startApp(session.user);
+    } else {
+      showLoggedOut();
+    }
+  });
+});
+
+
+// ========================================
+// AUTH
+// ========================================
 
 function showLogin() {
-  document.getElementById("loginForm").style.display = "block";
-  document.getElementById("signupForm").style.display = "none";
+  document.getElementById("loginBox").classList.remove("hidden");
+  document.getElementById("signupBox").classList.add("hidden");
 }
 
 function showSignup() {
-  document.getElementById("loginForm").style.display = "none";
-  document.getElementById("signupForm").style.display = "block";
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("signupBox").classList.remove("hidden");
 }
-
-
-// ==========================
-// SIGNUP
-// ==========================
 
 async function signup() {
-
-  const name =
-    document.getElementById("signupName").value.trim();
-
-  const email =
-    document.getElementById("signupEmail").value.trim();
-
-  const password =
-    document.getElementById("signupPassword").value;
-
-  const message =
-    document.getElementById("authMessage");
+  const name = document.getElementById("signupName").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
 
   if (!name || !email || !password) {
-    message.textContent = "Please fill all fields.";
+    setMessage("authMessage", "Please fill all fields.");
     return;
   }
 
-  if (password.length < 6) {
-    message.textContent =
-      "Password must be at least 6 characters.";
-    return;
-  }
-
-  message.textContent = "Creating account...";
-
-  const { data, error } =
-    await db.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name
-        }
+  const { error } = await db.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: name
       }
-    });
+    }
+  });
 
   if (error) {
-    message.textContent = error.message;
+    setMessage("authMessage", error.message);
     return;
   }
 
-  message.textContent =
-    "Account created! Check your email if verification is required.";
+  setMessage(
+    "authMessage",
+    "Account created! Check your email if confirmation is required."
+  );
 }
-
-
-// ==========================
-// LOGIN
-// ==========================
 
 async function login() {
-
-  const email =
-    document.getElementById("loginEmail").value.trim();
-
-  const password =
-    document.getElementById("loginPassword").value;
-
-  const message =
-    document.getElementById("authMessage");
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
   if (!email || !password) {
-    message.textContent = "Enter email and password.";
+    setMessage("authMessage", "Enter email and password.");
     return;
   }
 
-  message.textContent = "Logging in...";
-
-  const { data, error } =
-    await db.auth.signInWithPassword({
-      email,
-      password
-    });
+  const { error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
 
   if (error) {
-    message.textContent = error.message;
-    return;
+    setMessage("authMessage", error.message);
   }
-
-  closeAuth();
-
-  await setupUser(data.user);
 }
-
-
-// ==========================
-// LOGOUT
-// ==========================
 
 async function logout() {
-
   await db.auth.signOut();
+}
 
-  document.getElementById("authButtons").style.display = "block";
-  document.getElementById("userArea").style.display = "none";
+function showLoggedOut() {
+  currentUser = null;
+  currentProfile = null;
 
-  document.getElementById("uploadSection").style.display = "none";
-  document.getElementById("adminSection").style.display = "none";
+  document.getElementById("authSection").classList.remove("hidden");
+  document.getElementById("appSection").classList.add("hidden");
+  document.getElementById("adminSection").classList.add("hidden");
 
-  loadApprovedNotes();
+  document.getElementById("userArea").innerHTML = "";
 }
 
 
-// ==========================
-// USER SETUP
-// ==========================
+// ========================================
+// APP START
+// ========================================
 
-async function setupUser(user) {
+async function startApp(user) {
+  currentUser = user;
 
-  if (!user) return;
-
-  document.getElementById("authButtons").style.display = "none";
-  document.getElementById("userArea").style.display = "block";
-
-  const name =
-    user.user_metadata?.full_name || user.email;
-
-  document.getElementById("welcomeUser").textContent =
-    "Welcome, " + name + "!";
-
-  // Everyone logged in can upload
-  document.getElementById("uploadSection").style.display = "block";
-
-  // Check admin role
-  const { data: profile, error } =
-    await db
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-  if (!error && profile?.role === "admin") {
-
-    document.getElementById("adminSection").style.display =
-      "block";
-
-    loadPendingNotes();
-  }
-
-  loadApprovedNotes();
-}
-
-
-// ==========================
-// UPLOAD NOTE
-// ==========================
-
-async function uploadNote() {
-
-  const title =
-    document.getElementById("noteTitle").value.trim();
-
-  const subject =
-    document.getElementById("noteSubject").value.trim();
-
-  const description =
-    document.getElementById("noteDescription").value.trim();
-
-  const file =
-    document.getElementById("noteFile").files[0];
-
-  const message =
-    document.getElementById("uploadMessage");
-
-  if (!title || !subject || !file) {
-    message.textContent =
-      "Title, subject and PDF are required.";
-    return;
-  }
-
-  if (file.type !== "application/pdf") {
-    message.textContent =
-      "Only PDF files are allowed.";
-    return;
-  }
-
-  message.textContent = "Uploading...";
-
-  const { data: userData } =
-    await db.auth.getUser();
-
-  const user = userData.user;
-
-  if (!user) {
-    message.textContent =
-      "Please login first.";
-    return;
-  }
-
-  // Create unique file path
-  const safeName =
-    file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
-  const filePath =
-    user.id + "/" + Date.now() + "_" + safeName;
-
-
-  // Upload PDF to Supabase Storage
-
-  const { error: storageError } =
-    await db.storage
-      .from("notes")
-      .upload(filePath, file, {
-        contentType: "application/pdf",
-        upsert: false
-      });
-
-  if (storageError) {
-    message.textContent =
-      "File upload failed: " +
-      storageError.message;
-    return;
-  }
-
-
-  // Add note information to database
-
-  const { error: noteError } =
-    await db
-      .from("notes")
-      .insert({
-        title: title,
-        subject: subject,
-        description: description || null,
-        file_path: filePath,
-        file_name: file.name,
-        uploaded_by: user.id,
-        uploaded_by_name:
-          user.user_metadata?.full_name ||
-          user.email,
-        status: "pending"
-      });
-
-  if (noteError) {
-
-    // Remove uploaded file if database insert fails
-    await db.storage
-      .from("notes")
-      .remove([filePath]);
-
-    message.textContent =
-      "Database error: " +
-      noteError.message;
-
-    return;
-  }
-
-
-  message.textContent =
-    "✅ Note uploaded! Waiting for admin approval.";
-
-  document.getElementById("noteTitle").value = "";
-  document.getElementById("noteSubject").value = "";
-  document.getElementById("noteDescription").value = "";
-  document.getElementById("noteFile").value = "";
-}
-
-
-// ==========================
-// LOAD APPROVED NOTES
-// ==========================
-
-async function loadApprovedNotes() {
-
-  const container =
-    document.getElementById("approvedNotes");
-
-  container.innerHTML =
-    "Loading notes...";
-
-  const { data, error } =
-    await db
-      .from("notes")
-      .select("*")
-      .eq("status", "approved")
-      .order("created_at", {
-        ascending: false
-      });
+  const { data: profile, error } = await db
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
   if (error) {
-    container.innerHTML =
-      "Could not load notes.";
-    console.log(error);
+    console.error(error);
+    alert("Profile load error: " + error.message);
     return;
   }
 
-  if (!data || data.length === 0) {
-    container.innerHTML =
-      "<p>No approved notes yet.</p>";
-    return;
-  }
+  currentProfile = profile;
 
-  container.innerHTML = "";
+  document.getElementById("authSection").classList.add("hidden");
+  document.getElementById("appSection").classList.remove("hidden");
 
-  data.forEach(note => {
+  document.getElementById("welcomeText").textContent =
+    `Welcome, ${profile.full_name || user.email}!`;
 
-    const card =
-      document.createElement("div");
+  document.getElementById("userArea").textContent =
+    profile.full_name || user.email;
 
-    card.className = "note-card";
+  await loadSubjects();
 
-    card.innerHTML = `
-      <h3>📄 ${escapeHtml(note.title)}</h3>
+  if (profile.role === "admin") {
+    document.getElementById("adminSection").classList.remove("hidden");
 
-      <p><b>Subject:</b>
-        ${escapeHtml(note.subject)}
-      </p>
-
-      <p>
-        ${escapeHtml(note.description || "")}
-      </p>
-
-      <p>
-        <b>Uploaded by:</b>
-        ${escapeHtml(note.uploaded_by_name)}
-      </p>
-
-      <button onclick="downloadNote('${note.file_path}')">
-        📥 View / Download PDF
-      </button>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-
-// ==========================
-// DOWNLOAD APPROVED NOTE
-// ==========================
-
-async function downloadNote(filePath) {
-
-  const { data, error } =
-    await db.storage
-      .from("notes")
-      .createSignedUrl(filePath, 60);
-
-  if (error) {
-    alert(
-      "Could not open file: " +
-      error.message
-    );
-    return;
-  }
-
-  window.open(data.signedUrl, "_blank");
-}
-
-
-// ==========================
-// ADMIN: LOAD PENDING NOTES
-// ==========================
-
-async function loadPendingNotes() {
-
-  const container =
-    document.getElementById("pendingNotes");
-
-  container.innerHTML =
-    "Loading pending notes...";
-
-  const { data, error } =
-    await db
-      .from("notes")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", {
-        ascending: false
-      });
-
-  if (error) {
-    container.innerHTML =
-      "Could not load pending notes: " +
-      error.message;
-
-    console.log(error);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    container.innerHTML =
-      "<p>🎉 No pending notes.</p>";
-    return;
-  }
-
-  container.innerHTML = "";
-
-  data.forEach(note => {
-
-    const card =
-      document.createElement("div");
-
-    card.className = "note-card";
-
-    card.innerHTML = `
-      <h3>📄 ${escapeHtml(note.title)}</h3>
-
-      <p>
-        <b>Subject:</b>
-        ${escapeHtml(note.subject)}
-      </p>
-
-      <p>
-        <b>Uploaded by:</b>
-        ${escapeHtml(note.uploaded_by_name)}
-      </p>
-
-      <p>
-        ${escapeHtml(note.description || "")}
-      </p>
-
-      <button onclick="reviewNote('${note.id}', 'approved')">
-        ✅ Approve
-      </button>
-
-      <button onclick="reviewNote('${note.id}', 'rejected')">
-        ❌ Reject
-      </button>
-
-      <button onclick="downloadNote('${note.file_path}')">
-        👀 View PDF
-      </button>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-
-// ==========================
-// ADMIN: APPROVE / REJECT
-// ==========================
-
-async function reviewNote(noteId, status) {
-
-  const action =
-    status === "approved"
-      ? "approve"
-      : "reject";
-
-  const confirmed =
-    confirm(
-      "Are you sure you want to " +
-      action +
-      " this note?"
-    );
-
-  if (!confirmed) return;
-
-  const { error } =
-    await db
-      .from("notes")
-      .update({
-        status: status,
-        reviewed_at: new Date().toISOString()
-      })
-      .eq("id", noteId);
-
-  if (error) {
-
-    alert(
-      "Action failed: " +
-      error.message
-    );
-
-    return;
-  }
-
-  alert(
-    status === "approved"
-      ? "✅ Note approved!"
-      : "❌ Note rejected!"
-  );
-
-  loadPendingNotes();
-  loadApprovedNotes();
-}
-
-
-// ==========================
-// SIMPLE HTML SAFETY
-// ==========================
-
-function escapeHtml(text) {
-
-  const div =
-    document.createElement("div");
-
-  div.textContent = text;
-
-  return div.innerHTML;
-}
-
-
-// ==========================
-// AUTH STATE
-// ==========================
-
-db.auth.onAuthStateChange(
-  async (event, session) => {
-
-    if (session?.user) {
-      await setupUser(session.user);
-    }
-
-  }
-);
-
-
-// ==========================
-// START WEBSITE
-// ==========================
-
-async function startApp() {
-
-  const { data } =
-    await db.auth.getUser();
-
-  if (data.user) {
-    await setupUser(data.user);
+    await loadAdminSubjects();
+    await loadPendingUnitNotes();
+    await loadPendingSyllabus();
   } else {
-    loadApprovedNotes();
+    document.getElementById("adminSection").classList.add("hidden");
   }
 }
 
-startApp();
+
+// ========================================
+// SUBJECTS
+// ========================================
+
+async function loadSubjects() {
+  const { data, error } = await db
+    .from("subjects")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const grid = document.getElementById("subjectsGrid");
+  grid.innerHTML = "";
+
+  data.forEach(subject => {
+    const card = document.createElement("div");
+    card.className = "subject-card";
+
+    card.innerHTML = `
+      <h3>📘 ${escapeHtml(subject.name)}</h3>
+      <p>${subject.is_announcement
+        ? "Class announcements"
+        : "Units & Syllabus/PDF"}</p>
+    `;
+
+    card.onclick = () => openSubject(subject);
+
+    grid.appendChild(card);
+  });
+}
+
+
+// ========================================
+// SUBJECT VIEW
+// ========================================
+
+async function openSubject(subject) {
+  currentSubject = subject;
+
+  document.getElementById("subjectView").classList.remove("hidden");
+  document.getElementById("subjectTitle").textContent = subject.name;
+
+  document.getElementById("unitsArea").classList.add("hidden");
+  document.getElementById("syllabusArea").classList.add("hidden");
+  document.getElementById("announcementView").classList.add("hidden");
+  document.getElementById("unitView").classList.add("hidden");
+
+  const options = document.getElementById("subjectOptions");
+  options.innerHTML = "";
+
+  if (subject.is_announcement) {
+    const announcementCard = document.createElement("div");
+    announcementCard.className = "option-card";
+
+    announcementCard.innerHTML = `
+      <h3>📢 Announcements</h3>
+      <p>Latest class announcements</p>
+    `;
+
+    announcementCard.onclick = loadAnnouncements;
+
+    options.appendChild(announcementCard);
+
+    return;
+  }
+
+  const unitsCard = document.createElement("div");
+  unitsCard.className = "option-card";
+
+  unitsCard.innerHTML = `
+    <h3>📖 Units</h3>
+    <p>Class notes by unit</p>
+  `;
+
+  unitsCard.onclick = () => loadUnits(subject.id);
+
+  const syllabusCard = document.createElement("div");
+  syllabusCard.className = "option-card";
+
+  syllabusCard.innerHTML = `
+    <h3>📄 Syllabus / PDF</h3>
+    <p>Subject documents</p>
+  `;
+
+  syllabusCard.onclick = () => loadSyllabus(subject.id);
+
+  options.appendChild(unitsCard);
+  options.appendChild(syllabusCard);
+}
+
+
+// ========================================
+// UNITS
+// ========================================
+
+async function loadUnits(subjectId) {
+  document.getElementById("unitsArea").classList.remove("hidden");
+  document.getElementById("syllabusArea").classList.add("hidden");
+
+  const { data, error } = await db
+    .from("units")
+    .select("*")
+    .eq("subject_id", subjectId)
+    .order("unit_number");
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const grid = document.getElementById("unitsGrid");
+  grid.innerHTML = "";
+
+  if (!data.length) {
+    grid.innerHTML = "<p>No units added yet.</p>";
+    return;
+  }
+
+  data.forEach(unit => {
+    const card = document.createElement("div");
+    card.className = "unit-card";
+
+    card.innerHTML = `
+      <h3>Unit ${unit.unit_number}</h3>
+      <p>${escapeHtml(unit.title || "")}</p>
+    `;
+
+    card.onclick = () => openUnit(unit);
+
+    grid.appendChild(card);
+  });
+}
+
+
+// ========================================
+// UNIT NOTES
+// ========================================
+
+async function openUnit(unit) {
+  currentUnit = unit;
+
+  document.getElementById("subjectView").classList.add("hidden");
+  document.getElementById("unitView").classList.remove("hidden");
+
+  document.getElementById("unitTitle").textContent =
+    `Unit ${unit.unit_number} — ${unit.title}`;
+
+  await loadUnitNotes(unit.id);
+}
+
+async function loadUnitNotes(unitId) {
+  const list = document.getElementById("unitNotesList");
+  list.innerHTML = "<p>Loading notes...</p>";
+
+  const { data: batches, error } = await db
+    .from("unit_note_batches")
+    .select("*")
+    .eq("unit_id", unitId)
+    .eq("status", "approved")
+    .order("created_at");
+
+  if (error) {
+    list.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
+    return;
+  }
+
+  list.innerHTML = "";
+
+  if (!batches.length) {
+    list.innerHTML = "<p>No approved notes yet.</p>";
+    return;
+  }
+
+  for (const batch of batches) {
+
+    const { data: files } = await db
+      .from("unit_note_files")
+      .select("*")
+      .eq("batch_id", batch.id)
+      .order("page_order");
+
+    const card = document.createElement("div");
+    card.className = "note-card";
+
+    let html = `
+      <h3>${escapeHtml(batch.title)}</h3>
+      ${batch.description
+        ? `<p>${escapeHtml(batch.description)}</p>`
+        : ""}
+      <small>
+        ${new Date(batch.created_at).toLocaleString()}
+      </small>
+      <div>
+    `;
+
+    if (files) {
+      for (const file of files) {
+        const { data: signed } = await db.storage
+          .from("notes")
+          .createSignedUrl(file.file_path, 3600);
+
+        if (signed?.signedUrl) {
+          html += `
+            <p>
