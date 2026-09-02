@@ -1295,65 +1295,73 @@ async function loadPendingUnitNotes() {
 
   if (!list) return;
 
+  list.innerHTML = "<p>Loading pending notes...</p>";
 
-  const { data, error } =
+  // Get pending notes
+  const { data: batches, error: batchError } =
     await db
       .from("unit_note_batches")
-      .select(`
-        *,
-        units (
-          unit_number,
-          title,
-          subjects (
-            name
-          )
-        )
-      `)
+      .select("*")
       .eq("status", "pending")
       .order("created_at");
 
+  if (batchError) {
 
-  if (error) {
+    console.error("Pending notes error:", batchError);
 
     list.innerHTML =
-      `<p>${escapeHtml(error.message)}</p>`;
+      `<p>${escapeHtml(batchError.message)}</p>`;
 
     return;
-
   }
-
 
   list.innerHTML = "";
 
-
-  if (!data.length) {
+  if (!batches || batches.length === 0) {
 
     list.innerHTML =
       "<p>No pending unit notes.</p>";
 
     return;
-
   }
 
+  // Show every pending note
+  for (const batch of batches) {
 
-  data.forEach(batch => {
+    let subjectName = "Unknown Subject";
+    let unitText = "Unknown Unit";
+
+    // Get unit
+    const { data: unit } =
+      await db
+        .from("units")
+        .select("unit_number, title, subject_id")
+        .eq("id", batch.unit_id)
+        .maybeSingle();
+
+    if (unit) {
+
+      unitText =
+        `Unit ${unit.unit_number} — ${unit.title}`;
+
+      // Get subject
+      const { data: subject } =
+        await db
+          .from("subjects")
+          .select("name")
+          .eq("id", unit.subject_id)
+          .maybeSingle();
+
+      if (subject) {
+        subjectName = subject.name;
+      }
+
+    }
 
     const item =
       document.createElement("div");
 
-    item.className =
-      "admin-item";
-
-
-    const subjectName =
-      batch.units?.subjects?.name || "";
-
-
-    const unitText =
-      batch.units
-        ? `Unit ${batch.units.unit_number} — ${batch.units.title}`
-        : "";
-
+    item.className = "admin-item";
 
     item.innerHTML = `
 
@@ -1370,7 +1378,7 @@ async function loadPendingUnitNotes() {
       </p>
 
       <p>
-        Uploaded by:
+        👤 Uploaded by:
         ${escapeHtml(batch.uploaded_by_name || "Unknown")}
       </p>
 
@@ -1380,27 +1388,34 @@ async function loadPendingUnitNotes() {
           : ""
       }
 
-      <button
-        class="primary"
-        onclick="reviewUnitNote('${batch.id}', 'approved')"
-      >
-        ✅ Approve
-      </button>
+      <p>
+        🕒 ${new Date(batch.created_at).toLocaleString()}
+      </p>
 
-      <button
-        onclick="reviewUnitNote('${batch.id}', 'rejected')"
-      >
-        ❌ Reject
-      </button>
+      <div>
+
+        <button
+          class="primary"
+          onclick="reviewUnitNote('${batch.id}', 'approved')"
+        >
+          ✅ Approve
+        </button>
+
+        <button
+          onclick="reviewUnitNote('${batch.id}', 'rejected')"
+        >
+          ❌ Reject
+        </button>
+
+      </div>
 
     `;
 
-
     list.appendChild(item);
 
-  });
+  }
 
-}
+    }
 
 
 // ========================================
