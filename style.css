@@ -13,51 +13,98 @@ header {
   background: #2864d7;
   color: white;
   text-align: center;
-  padding: 45px 20px;
+  padding: 40px 15px;
 }
 
 header h1 {
   font-size: 42px;
-  margin: 0 0 15px;
+  margin: 0 0 12px;
 }
 
 header p {
-  font-size: 24px;
+  font-size: 23px;
   margin: 0;
 }
 
 main {
   max-width: 900px;
-  margin: 55px auto;
+  margin: 45px auto;
   padding: 0 20px;
 }
 
 section {
   background: white;
   border-radius: 25px;
-  padding: 45px;
-  margin-bottom: 40px;
+  padding: 35px;
+  margin-bottom: 30px;
   box-shadow: 0 5px 20px rgba(0,0,0,0.08);
 }
 
 h2 {
-  font-size: 32px;
+  font-size: 30px;
 }
 
 button {
   border: none;
   background: #2864d7;
   color: white;
-  padding: 15px 30px;
+  padding: 14px 25px;
   border-radius: 10px;
-  font-size: 18px;
+  font-size: 17px;
   cursor: pointer;
-  margin: 8px;
+  margin: 7px 4px;
 }
 
 button:hover {
   opacity: 0.9;
 }
+
+input,
+textarea {
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 9px;
+  font-size: 16px;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.note-card {
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 15px 0;
+}
+
+.note-card h3 {
+  margin-top: 0;
+}
+
+.note-card button {
+  font-size: 15px;
+}
+
+.status {
+  font-weight: bold;
+}
+
+.pending {
+  color: #d88900;
+}
+
+.approved {
+  color: green;
+}
+
+.rejected {
+  color: #c62828;
+}
+
 
 /* Popup */
 
@@ -69,6 +116,7 @@ button:hover {
   justify-content: center;
   align-items: center;
   padding: 20px;
+  z-index: 10;
 }
 
 .modal-box {
@@ -82,32 +130,33 @@ button:hover {
 
 .modal-box h2 {
   text-align: center;
-  margin-top: 5px;
-}
-
-.modal-box input {
-  width: 100%;
-  padding: 14px;
-  margin: 8px 0;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-.modal-box button {
-  width: 100%;
-  margin: 12px 0;
 }
 
 .close {
   position: absolute;
   right: 20px;
-  top: 12px;
+  top: 10px;
   font-size: 30px;
   cursor: pointer;
 }
 
-#authMessage {
+#authMessage,
+#uploadMessage {
   text-align: center;
   font-weight: bold;
+}
+
+@media (max-width: 600px) {
+
+  header h1 {
+    font-size: 32px;
+  }
+
+  header p {
+    font-size: 19px;
+  }
+
+  section {
+    padding: 25px;
+  }
 }
