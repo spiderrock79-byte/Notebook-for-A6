@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Class Notes Hub</title>
-
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -18,38 +16,72 @@
 
   <main>
 
-    <section class="hero">
+    <section class="welcome">
       <h2>Welcome to Class Notes Hub</h2>
+      <p>Find useful notes shared by your classmates.</p>
 
-      <p>
-        Find useful notes shared by your classmates.
-      </p>
+      <div id="authButtons">
+        <button onclick="openLogin()">Login</button>
+        <button onclick="openSignup()">Create Account</button>
+      </div>
 
-      <div class="buttons">
-        <button onclick="showMessage('Login')">
-          Login
-        </button>
-
-        <button onclick="showMessage('Signup')">
-          Create Account
-        </button>
+      <div id="userArea" style="display:none;">
+        <p id="welcomeUser"></p>
+        <button onclick="logout()">Logout</button>
       </div>
     </section>
 
-    <section class="notes-section">
+    <section class="notes">
       <h2>📖 Approved Notes</h2>
-
-      <p id="notesMessage">
-        Notes will appear here after they are approved.
-      </p>
+      <p>Notes will appear here after they are approved.</p>
     </section>
 
   </main>
 
-  <footer>
-    <p>© 2026 Class Notes Hub</p>
-  </footer>
+  <!-- Login / Signup popup -->
+  <div id="authModal" class="modal">
+    <div class="modal-box">
 
+      <span class="close" onclick="closeAuth()">×</span>
+
+      <div id="loginForm">
+        <h2>Login</h2>
+
+        <input id="loginEmail" type="email" placeholder="Email">
+        <input id="loginPassword" type="password" placeholder="Password">
+
+        <button onclick="login()">Login</button>
+
+        <p>
+          Don't have an account?
+          <a href="#" onclick="showSignup(); return false;">Create Account</a>
+        </p>
+      </div>
+
+      <div id="signupForm" style="display:none;">
+        <h2>Create Account</h2>
+
+        <input id="signupName" type="text" placeholder="Full Name">
+        <input id="signupEmail" type="email" placeholder="Email">
+        <input id="signupPassword" type="password" placeholder="Password">
+
+        <button onclick="signup()">Create Account</button>
+
+        <p>
+          Already have an account?
+          <a href="#" onclick="showLogin(); return false;">Login</a>
+        </p>
+      </div>
+
+      <p id="authMessage"></p>
+
+    </div>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Our JavaScript -->
   <script src="app.js"></script>
 
 </body>
